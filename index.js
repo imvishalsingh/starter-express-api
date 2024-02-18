@@ -17,6 +17,7 @@ var synfile     = "";
 
 var dictFile    = "";
 
+// 
 // Define a route to get the definition of a word
 app.get('/getDict', async (req, res) => {
 
@@ -24,11 +25,11 @@ app.get('/getDict', async (req, res) => {
     try {
        
       const response = await axios.get(req?.query?.dictPath, { responseType: 'stream' });
+
       const tarFilePath = path.join(__dirname, 'dictFile.tar.gz');
       const tarFileWriteStream = fs.createWriteStream(tarFilePath);
 
       response.data.pipe(tarFileWriteStream);
-
       await new Promise((resolve, reject) => {
         tarFileWriteStream.on('finish', resolve);
         tarFileWriteStream.on('error', reject);
@@ -85,8 +86,10 @@ app.get('/getDict', async (req, res) => {
       res.json({status: true, msg: "", data: { dictName: dictFile, dictWords: tempArr }});
 
     } catch (error) {
-      console.error('Error:', error.message);
-      res.status(500).send('Internal Server Error');
+      if(error?.response?.status==404){
+        res.json({status: false, msg: "", data: "Dictionary not found!"});
+      }
+      //res.status(500).send('Internal Server Error');
     }
   }
 });
